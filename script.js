@@ -139,12 +139,10 @@ class JavaScriptObfuscator {
                     varMap.set(name, \`_\${varCount.toString(36)}\`);
                     varCount++;
                 });
-
-                // Kita tidak bisa menggunakan closure di string template worker, jadi kita lakukan penggantian di sini
+                
                 let mangledCode = code;
                 for (let [oldName, newName] of varMap) {
-                    // Escape karakter khusus dalam nama variabel saat membuat regex
-                    const escapedOldName = oldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const escapedOldName = oldName.replace(/[.*+?^\${}()|[\]\\]/g, '\\$&');
                     const regexStr = '\\b' + escapedOldName + '\\b';
                     mangledCode = mangledCode.replace(new RegExp(regexStr, 'g'), newName);
                 }
