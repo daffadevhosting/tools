@@ -97,7 +97,7 @@ class JavaScriptObfuscator {
             function mangleVariables(code) {
                 let varCount = 0;
                 const varMap = new Map();
-                
+
                 const keywords = new Set([
                     'abstract', 'arguments', 'await', 'boolean', 'break', 'byte', 'case', 'catch', 'char', 'class', 'const', 'continue',
                     'debugger', 'default', 'delete', 'do', 'double', 'else', 'enum', 'eval', 'export', 'extends', 'false', 'final',
@@ -105,21 +105,21 @@ class JavaScriptObfuscator {
                     'let', 'long', 'native', 'new', 'null', 'package', 'private', 'protected', 'public', 'return', 'short', 'static',
                     'super', 'switch', 'synchronized', 'this', 'throw', 'throws', 'transient', 'true', 'try', 'typeof', 'var', 'void',
                     'volatile', 'while', 'with', 'yield',
-                    
+
                     // Kata Kunci Class & Objek
                     'constructor', 'prototype', '__proto__', 'toString', 'valueOf', 'hasOwnProperty',
-                    
+
                     // Global & Bawaan
                     'Array', 'Object', 'String', 'Number', 'Boolean', 'Function', 'Symbol', 'Date', 'Math', 'RegExp', 'JSON', 'Promise',
                     'window', 'document', 'navigator', 'location', 'localStorage', 'sessionStorage', 'console', 'alert',
                     'setTimeout', 'setInterval', 'getElementById', 'querySelector', 'querySelectorAll', 'addEventListener',
-                    
+
                     // Properti & Metode Umum
                     'length', 'name', 'push', 'pop', 'shift', 'unshift', 'slice', 'splice', 'map', 'filter', 'reduce', 'forEach',
                     'join', 'split', 'replace', 'match', 'search', 'indexOf', 'lastIndexOf', 'startsWith', 'endsWith', 'includes',
-                    'toLowerCase', 'toUpperCase', 'trim', 'log', 'warn', 'error', 'innerHTML', 'textContent', 'value', 'style', 
+                    'toLowerCase', 'toUpperCase', 'trim', 'log', 'warn', 'error', 'innerHTML', 'textContent', 'value', 'style',
                     'className', 'id', 'src', 'href',
-                    
+
                     // Nama array string kita
                     '_s'
                 ]);
@@ -134,17 +134,20 @@ class JavaScriptObfuscator {
                     }
                 }
 
+                // Membuat mapping nama variabel
                 identifiers.forEach(name => {
                     varMap.set(name, \`_\${varCount.toString(36)}\`);
                     varCount++;
                 });
 
+                // Kita tidak bisa menggunakan closure di string template worker, jadi kita lakukan penggantian di sini
                 let mangledCode = code;
-                varMap.forEach((newName, oldName) => {
-                    // Membuat regex untuk mengganti hanya nama variabel yang bukan bagian dari string
-                    const replaceRegex = new RegExp(\`\\b${oldName}\\b\`, 'g');
-                    mangledCode = mangledCode.replace(replaceRegex, newName);
-                });
+                for (let [oldName, newName] of varMap) {
+                    // Escape karakter khusus dalam nama variabel saat membuat regex
+                    const escapedOldName = oldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regexStr = '\\b' + escapedOldName + '\\b';
+                    mangledCode = mangledCode.replace(new RegExp(regexStr, 'g'), newName);
+                }
 
                 return mangledCode;
             }
