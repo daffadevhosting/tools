@@ -218,7 +218,7 @@
                 <div class="option-group">
                     <label for="compact">Compact Code:</label>
                     <select id="compact">
-                        <option value="true">Ya</option>
+                        <option value="true" selected>Ya</option>
                         <option value="false">Tidak</option>
                     </select>
                 </div>
@@ -226,40 +226,47 @@
                     <label for="controlFlow">Control Flow Obfuscation:</label>
                     <select id="controlFlow">
                         <option value="true">Aktif</option>
-                        <option value="false">Non-aktif</option>
+                        <option value="false" selected>Non-aktif</option>
                     </select>
                 </div>
                 <div class="option-group">
                     <label for="stringArray">String Array:</label>
                     <select id="stringArray">
-                        <option value="true">Aktif</option>
+                        <option value="true" selected>Aktif</option>
                         <option value="false">Non-aktif</option>
                     </select>
                 </div>
                 <div class="option-group">
                     <label for="stringArrayThreshold">String Array Threshold:</label>
-                    <input type="number" id="stringArrayThreshold" value="0.75" min="0" max="1" step="0.1">
+                    <input type="number" id="stringArrayThreshold" value="3" min="0" max="100" step="1">
                 </div>
                 <div class="option-group">
                     <label for="deadCode">Dead Code Injection:</label>
                     <select id="deadCode">
                         <option value="true">Aktif</option>
-                        <option value="false">Non-aktif</option>
+                        <option value="false" selected>Non-aktif</option>
                     </select>
                 </div>
                 <div class="option-group">
                     <label for="debugProtection">Debug Protection:</label>
                     <select id="debugProtection">
                         <option value="true">Aktif</option>
+                        <option value="false" selected>Non-aktif</option>
+                    </select>
+                </div>
+                <div class="option-group">
+                    <label for="mangle">Mangle Variables:</label>
+                    <select id="mangle">
+                        <option value="true" selected>Aktif</option>
                         <option value="false">Non-aktif</option>
                     </select>
                 </div>
             </div>
-            
+
             <div class="buttons">
-                <button id="obfuscateButton">Obfuscate</button>
-                <button class="btn btn-secondary" onclick="clearCode()">Clear</button>
-                <button class="btn btn-success" onclick="loadExample()">Load Example</button>
+                <button id="obfuscateButton" class="btn btn-primary">Obfuscate</button>
+                <button id="clearButton" class="btn btn-secondary">Clear</button>
+                <button id="loadButton" class="btn btn-success">Load Example</button>
             </div>
 
             <div id="status" class="status"></div>
@@ -275,7 +282,7 @@
             <div class="editor-box">
                 <h3>
                     Obfuscated Code
-                    <button class="copy-btn" onclick="copyToClipboard()">Copy Code</button>
+                    <button id="copyButton" class="copy-btn">Copy Code</button>
                 </h3>
                 <textarea id="outputCode" class="code-editor" placeholder="Hasil obfuscation akan muncul di sini..." readonly></textarea>
                 <div class="char-count">Karakter: <span id="outputCount">0</span></div>
