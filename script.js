@@ -27,7 +27,6 @@ class JavaScriptObfuscator {
     }
 
     getWorkerCode() {
-    getWorkerCode() {
         return `
             self.onmessage = function(e) {
                 const { code, options } = e.data;
