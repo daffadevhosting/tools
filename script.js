@@ -77,39 +77,71 @@ class JavaScriptObfuscator {
                 
                 return obfuscated;
             }
-            
-            function obfuscateStrings(code, threshold) {
-                const stringRegex = /(['"])(?:(?=(\\\\?))\\2.)*?\\1/g;
-                const strings = [];
-                
-                // Collect all strings
-                code = code.replace(stringRegex, (match) => {
-                    strings.push(match);
-                    return \`_s[\${strings.length - 1}]\`;
-                });
-                
-                if (strings.length > 0) {
-                    const stringArrayCode = \`var _s=[\${strings.join(',')}];\\n\`;
-                    return stringArrayCode + code;
+   
+function obfuscateStrings(code, threshold) {
+    const stringRegex = /(['"])(?:(?=(\\?))\2.)*?\1/g;
+    const strings = [];
+    
+    code = code.replace(stringRegex, (match) => {
+        strings.push(match);
+        return `_s[${strings.length - 1}]`;
+    });
+    
+    const templateRegex = /`(?:\\.|[^`])*`/g;
+    code = code.replace(templateRegex, (match) => {
+        
+        const parts = match.split(/\$\{([^}]+)\}/);
+        let newString = '';
+        for (let i = 0; i < parts.length; i++) {
+            if (i % 2 === 0) {
+                // String part
+                if (parts[i]) {
+                    strings.push(`"${parts[i].replace(/`/g, '').replace(/"/g, '\\"')}"`);
+                    newString += `_s[${strings.length - 1}]`;
                 }
-                
-                return code;
+            } else {               
+                newString += `+(${parts[i]})`;
             }
-            
-            function mangleVariables(code) {
-                let varCount = 0;
-                const varMap = new Map();
-                
-                // Simple variable name replacement
-                return code.replace(/\\b(var|let|const)\\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/g, 
-                    (match, declaration, varName) => {
-                        if (!varMap.has(varName)) {
-                            varMap.set(varName, \`_\${varCount++}\`);
-                        }
-                        return \`\${declaration} \${varMap.get(varName)}\`;
+        }
+        return newString;
+    });
+    
+    if (strings.length > 0) {
+        const stringArrayCode = `var _s=[${strings.join(',')}];\n`;
+        return stringArrayCode + code;
+    }
+    
+    return code;
+}
+
+function mangleVariables(code) {
+    let varCount = 0;
+    const varMap = new Map();
+    
+        .replace(/\bfunction\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(([^)]*)\)/g, 
+            (match, funcName, params) => {
+                const newParams = params.split(',').map(param => {
+                    const trimmed = param.trim();
+                    if (!varMap.has(trimmed)) {
+                        varMap.set(trimmed, `_${varCount++}`);
                     }
-                );
+                    return varMap.get(trimmed);
+                }).join(',');
+                return `function ${funcName}(${newParams})`;
             }
+        )
+        .replace(/\b(var|let|const)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/g, 
+            (match, declaration, varName) => {
+                if (!varMap.has(varName)) {
+                    varMap.set(varName, `_${varCount++}`);
+                }
+                return `${declaration} ${varMap.get(varName)}`;
+            }
+        )
+        .replace(new RegExp(`\\b(${Array.from(varMap.keys()).join('|')})\\b`, 'g'),
+            (match) => varMap.get(match) || match
+        );
+}
             
             function obfuscateControlFlow(code) {
                 // Add dummy control flow structures
