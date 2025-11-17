@@ -73,7 +73,7 @@ class JavaScriptObfuscator {
             }
             
             function obfuscateStrings(code, threshold) {
-                const stringRegex = /(["'])(?:(?!\\1|\\\\).|\\\\.)*\\1|`(?:(?!`|\\\\|\\$\\{).|\\\\.)*`/g;
+                const stringRegex = /(["'])(?:(?!\\1|\\\\).|\\\\.)*\\1/g;
 
                 const strings = [];
                 
