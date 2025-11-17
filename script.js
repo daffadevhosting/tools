@@ -141,7 +141,8 @@ class JavaScriptObfuscator {
 
                 let mangledCode = code;
                 varMap.forEach((newName, oldName) => {
-                    const stringRegex = /(["'])(?:(?!\\1|\\\\).|\\\\.)*\\1|\`(?:(?!\`|\\\\|\\$\\{).|\\\\.)*\`/g;
+                    // Membuat regex untuk mengganti hanya nama variabel yang bukan bagian dari string
+                    const replaceRegex = new RegExp(\`\\b${oldName}\\b\`, 'g');
                     mangledCode = mangledCode.replace(replaceRegex, newName);
                 });
 
