@@ -2,7 +2,7 @@ class JavaScriptObfuscator {
     constructor() {
         this.worker = null;
         this.initWorker();
-        this.setupEventListeners(); // Sekarang akan menangani semua listener
+        this.setupEventListeners();
     }
 
     initWorker() {
@@ -27,6 +27,7 @@ class JavaScriptObfuscator {
     }
 
     getWorkerCode() {
+    getWorkerCode() {
         return `
             self.onmessage = function(e) {
                 const { code, options } = e.data;
@@ -42,7 +43,6 @@ class JavaScriptObfuscator {
             function obfuscateCode(code, options) {
                 let obfuscated = code;
                 
-                
                 if (options.compact) {
                     obfuscated = obfuscated
                         .replace(/\\/\\*[\\s\\S]*?\\*\\/|([^\\\\:]|^)\\/\\/.*$/gm, '$1')
@@ -50,26 +50,22 @@ class JavaScriptObfuscator {
                         .trim();
                 }
                 
-                if (options.mangle) { // Asumsi ada opsi 'mangle'
-                     obfuscated = mangleVariables(obfuscated);
-                }
-                
-                // Simple string obfuscation
                 if (options.stringArray) {
                     obfuscated = obfuscateStrings(obfuscated, options.stringArrayThreshold);
                 }
                 
-                // Control flow obfuscation
+                if (options.mangle) {
+                     obfuscated = mangleVariables(obfuscated);
+                }
+                
                 if (options.controlFlow) {
                     obfuscated = obfuscateControlFlow(obfuscated);
                 }
                 
-                // Dead code injection
                 if (options.deadCode) {
                     obfuscated = injectDeadCode(obfuscated);
                 }
                 
-                // Debug protection
                 if (options.debugProtection) {
                     obfuscated = addDebugProtection(obfuscated);
                 }
@@ -78,11 +74,11 @@ class JavaScriptObfuscator {
             }
             
             function obfuscateStrings(code, threshold) {
-                const stringRegex = /(['"])(?:(?=(\\\\?))\\2.)*?\\1/g;
+                const stringRegex = /(["'])(?:(?!\\1|\\\\).|\\\\.)*\\1|`(?:(?!`|\\\\|\\$\\{).|\\\\.)*`/g;
+
                 const strings = [];
                 
                 code = code.replace(stringRegex, (match) => {
-                    
                     if (match.length > (threshold || 3)) { 
                         strings.push(match);
                         return \`_s[\${strings.length - 1}]\`;
@@ -91,6 +87,7 @@ class JavaScriptObfuscator {
                 });
                 
                 if (strings.length > 0) {
+                    // Pastikan _s (nama array string) tidak akan di-mangle nanti
                     const stringArrayCode = \`var _s=[\${strings.join(',')}];\\n\`;
                     return stringArrayCode + code;
                 }
@@ -109,13 +106,25 @@ class JavaScriptObfuscator {
                     'let', 'long', 'native', 'new', 'null', 'package', 'private', 'protected', 'public', 'return', 'short', 'static',
                     'super', 'switch', 'synchronized', 'this', 'throw', 'throws', 'transient', 'true', 'try', 'typeof', 'var', 'void',
                     'volatile', 'while', 'with', 'yield',
-                    // Variabel/properti global umum
-                    'console', 'log', 'warn', 'error', 'document', 'window', 'getElementById', 'innerHTML', 'textContent', 'value', 'length',
+                    
+                    // Kata Kunci Class & Objek
+                    'constructor', 'prototype', '__proto__', 'toString', 'valueOf', 'hasOwnProperty',
+                    
+                    // Global & Bawaan
+                    'Array', 'Object', 'String', 'Number', 'Boolean', 'Function', 'Symbol', 'Date', 'Math', 'RegExp', 'JSON', 'Promise',
+                    'window', 'document', 'navigator', 'location', 'localStorage', 'sessionStorage', 'console', 'alert',
+                    'setTimeout', 'setInterval', 'getElementById', 'querySelector', 'querySelectorAll', 'addEventListener',
+                    
+                    // Properti & Metode Umum
+                    'length', 'name', 'push', 'pop', 'shift', 'unshift', 'slice', 'splice', 'map', 'filter', 'reduce', 'forEach',
+                    'join', 'split', 'replace', 'match', 'search', 'indexOf', 'lastIndexOf', 'startsWith', 'endsWith', 'includes',
+                    'toLowerCase', 'toUpperCase', 'trim', 'log', 'warn', 'error', 'innerHTML', 'textContent', 'value', 'style', 
+                    'className', 'id', 'src', 'href',
+                    
                     // Nama array string kita
                     '_s'
                 ]);
 
-               
                 const identifierRegex = /\\b[a-zA-Z_$][a-zA-Z0-9_$]*\\b/g;
                 const identifiers = new Set();
                 let match;
@@ -139,7 +148,7 @@ class JavaScriptObfuscator {
 
                 return mangledCode;
             }
-
+            
             function obfuscateControlFlow(code) {
                 const obfuscationCode = \`
                     (function(){
@@ -175,9 +184,8 @@ class JavaScriptObfuscator {
                 const debugProtection = \`
                     (function() {
                         var _0xdev = new Date();
-                        debugger; // Akan menjeda jika dev tools terbuka
+                        debugger; 
                         if (new Date() - _0xdev > 100) {
-                            // Waktu eksekusi lama = dev tools terbuka
                             console.log("Anti-Debug: Harap tutup developer tools.");
                         }
                     })();
@@ -189,7 +197,6 @@ class JavaScriptObfuscator {
     }
 
     setupEventListeners() {
-        // Asumsi ID tombol ini ada di HTML Anda
         const obfuscateButton = document.getElementById('obfuscateButton');
         const clearButton = document.getElementById('clearButton');
         const loadButton = document.getElementById('loadButton');
